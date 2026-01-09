@@ -6128,7 +6128,6 @@
     // ==========================================
     const CONFIG = {
       weddingDate: new Date(2026, 0, 17, 11, 0, 0).getTime(),
-      googleMapsURL: "https://maps.app.goo.gl/C8bseBmnPaQpTTZr8",
       qrCodeImageURL: "./assets/images/img/qr_nhagai.jpg",
       telegramBotToken: "8473681315:AAGd8yP36NNpNgrxu7hTil_qS8SuVjhcDeU",
       telegramChatId: "5237204162",
@@ -6350,13 +6349,41 @@
 
       // E. Fix Nút bản đồ (Sử dụng onclick để đè hoàn toàn hệ thống)
       const mapButton = document.querySelector('[data-node-id="MXcj3JAluy"]');
-      if (mapButton) {
-        mapButton.style.cursor = "pointer";
-        mapButton.onclick = function (e) {
+      if (mapButton && !mapButton.dataset.finalFixed) {
+
+        // 1. Dùng Link Search API (Tránh lỗi redirect của link rút gọntrên mobile)
+        const realMapUrl = "https://www.google.com/maps/place/21%C2%B023'03.7%22N+102%C2%B058'59.2%22E/@21.4138328,103.0248382,9z/data=!4m4!3m3!8m2!3d21.3843611!4d102.9831111?entry=ttu&g_ep=EgoyMDI2MDEwNi4wIKXMDSoASAFQAw%3D%3D";
+
+        // 2. Clone nút để xóa sạch 100% Event Listeners cũ của hệ thống CineLove
+        const newMapButton = mapButton.cloneNode(true);
+        mapButton.parentNode.replaceChild(newMapButton, mapButton);
+
+        // 3. Thiết lập thuộc tính mới
+        newMapButton.dataset.finalFixed = "true";
+        newMapButton.style.cursor = "pointer";
+
+        // Xóa mọi thuộc tính href nếu là thẻ <a>
+        if (newMapButton.tagName === 'A') {
+          newMapButton.removeAttribute('href');
+        }
+
+        // 4. Lắng nghe cả Click (Laptop) và Touch (Điện thoại)
+        const handleMapRedirect = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.open(CONFIG.googleMapsURL, '_blank');
+
+
+          // Mở tab mới
+          const mapWin = window.open(realMapUrl, '_blank');
+
+          // Nếu trình duyệt (Zalo/Mess) chặn tab mới, ép chuyển hướng ngay tại trang hiện tại
+          if (!mapWin || mapWin.closed || typeof mapWin.closed == 'undefined') {
+            window.location.href = realMapUrl;
+          }
         };
+
+        newMapButton.addEventListener('click', handleMapRedirect);
+        newMapButton.addEventListener('touchend', handleMapRedirect); // Quan trọng cho điện thoại
       }
       // QR code
       const giftBoxPhoto = document.querySelector('[data-node-id="xpY8BPcCJh"] .photo-bg-wrap');
